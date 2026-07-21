@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Donanım Hesaplama</title>
+  <!-- Three.js ve STL Loader -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -134,7 +138,7 @@
       text-align: center;
     }
 
-    /* RESİM ÖNİZLEME MODAL */
+    /* 3D ÖNİZLEME MODAL */
     .modal {
       display: none;
       position: fixed;
@@ -151,29 +155,32 @@
       display: flex;
     }
     .modal-content {
-      max-width: 80%;
-      max-height: 85%;
-      background: white;
+      max-width: 90%;
+      max-height: 90%;
+      background: #1a1a2e;
       padding: 20px;
       border-radius: 12px;
       box-shadow: 0 10px 40px rgba(0,0,0,0.5);
       position: relative;
       text-align: center;
     }
-    .modal-content img {
-      max-width: 100%;
-      max-height: 70vh;
+    .modal-content #stl-container {
+      width: 100%;
+      height: 65vh;
+      background: #1a1a2e;
       border-radius: 6px;
+      overflow: hidden;
+      position: relative;
     }
     .modal-content .urun-adi {
       margin-top: 12px;
       font-weight: 700;
       font-size: 18px;
-      color: #1a2634;
+      color: #ffffff;
     }
     .modal-content .urun-kod {
       font-size: 14px;
-      color: #6b7a8f;
+      color: #a0aec0;
     }
     .modal-close {
       position: absolute;
@@ -181,26 +188,47 @@
       right: 18px;
       font-size: 32px;
       font-weight: 700;
-      color: #1a2634;
+      color: #ffffff;
       cursor: pointer;
       transition: 0.2s;
       background: none;
       border: none;
       line-height: 1;
+      z-index: 10;
     }
     .modal-close:hover {
       color: #0078d7;
       transform: scale(1.1);
     }
 
-    .resim-link {
+    .stl-link {
       color: #0078d7;
       cursor: pointer;
       text-decoration: underline;
       font-weight: 500;
     }
-    .resim-link:hover {
+    .stl-link:hover {
       color: #005ea8;
+    }
+
+    .loading-text {
+      color: #a0aec0;
+      font-size: 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .loading-text .hata-detay {
+      font-size: 12px;
+      color: #ff6b6b;
+      background: rgba(255,107,107,0.1);
+      padding: 8px 16px;
+      border-radius: 6px;
+      max-width: 80%;
+      word-break: break-all;
     }
 
     @media (max-width: 700px) {
@@ -213,6 +241,9 @@
       .modal-content {
         max-width: 95%;
         padding: 15px;
+      }
+      .modal-content #stl-container {
+        height: 50vh;
       }
     }
   </style>
@@ -294,11 +325,13 @@
   <div id="sonuc"></div>
 </div>
 
-<!-- RESİM ÖNİZLEME MODAL -->
-<div id="resimModal" class="modal">
+<!-- 3D ÖNİZLEME MODAL -->
+<div id="stlModal" class="modal">
   <div class="modal-content">
-    <button class="modal-close" onclick="kapatModal()">&times;</button>
-    <img id="modalResim" src="" alt="Ürün Resmi">
+    <button class="modal-close" onclick="kapatStlModal()">&times;</button>
+    <div id="stl-container">
+      <div class="loading-text">⏳ 3D Model Yükleniyor...</div>
+    </div>
     <div class="urun-adi" id="modalUrunAdi"></div>
     <div class="urun-kod" id="modalUrunKod"></div>
   </div>
@@ -309,88 +342,295 @@
   // 1. MODÜL: ÇİFT AÇILIM TEK KANAT (MEVCUT REFERANS)
   // ============================================================
   const ispanyoletler = [
-    {ad:"VGR-1",kod:"710A01NT",min:480,max:730,resim:"710A01NT.jpg"},
-    {ad:"VGR-2",kod:"710A03NT",min:730,max:1180,resim:"710A03NT.jpg"},
-    {ad:"VGR-3",kod:"710A05NT",min:1180,max:1630,resim:"710A05NT.jpg"},
-    {ad:"VGR-4",kod:"710A06NT",min:1630,max:2080,resim:"710A06NT.jpg"},
-    {ad:"VGR-5",kod:"710A07NT",min:1900,max:2350,resim:"710A07NT.jpg"},
-    {ad:"VGR-1S",kod:"710A02NT",min:580,max:730,resim:"710A02NT.jpg"},
-    {ad:"VGR-S",kod:"710A04NT",min:950,max:1400,resim:"710A04NT.jpg"},
-    {ad:"VGR-ES",kod:"710B17NT",min:950,max:1400,resim:"710B17NT.jpg"},
-    {ad:"VGR-E3",kod:"710A65NT",min:1180,max:1630,resim:"710A65NT.jpg"},
-    {ad:"VGR-E4",kod:"710A66NT",min:1630,max:2080,resim:"710A66NT.jpg"},
-    {ad:"VGR-E5",kod:"710B15NT",min:1900,max:2350,resim:"710B15NT.jpg"}
+    {ad:"VGR-1",kod:"710A01NT",min:480,max:730},
+    {ad:"VGR-2",kod:"710A03NT",min:730,max:1180},
+    {ad:"VGR-3",kod:"710A05NT",min:1180,max:1630},
+    {ad:"VGR-4",kod:"710A06NT",min:1630,max:2080},
+    {ad:"VGR-5",kod:"710A07NT",min:1900,max:2350},
+    {ad:"VGR-1S",kod:"710A02NT",min:580,max:730},
+    {ad:"VGR-S",kod:"710A04NT",min:950,max:1400},
+    {ad:"VGR-ES",kod:"710B17NT",min:950,max:1400},
+    {ad:"VGR-E3",kod:"710A65NT",min:1180,max:1630},
+    {ad:"VGR-E4",kod:"710A66NT",min:1630,max:2080},
+    {ad:"VGR-E5",kod:"710B15NT",min:1900,max:2350}
   ];
 
   const makaslar = [
-    {model:"VMK-1",standart:"711A01NT",security:"",min:375,max:650,resim:"711A01NT.jpg"},
-    {model:"VMK-2",standart:"711A02NT",security:"",min:565,max:840,resim:"711A02NT.jpg"},
-    {model:"VMK-2S",standart:"711A03NT",security:"711A07NT",min:615,max:840,resim:"711A03NT.jpg"},
-    {model:"VMK-3",standart:"711A04NT",security:"711A39NT",min:770,max:1045,resim:"711A04NT.jpg"},
-    {model:"VMK-4",standart:"711A05NT",security:"711A09NT",min:990,max:1265,resim:"711A05NT.jpg"},
-    {model:"VMK-5",standart:"711A06NT",security:"711A10NT",min:1210,max:1485,resim:"711A06NT.jpg"}
+    {model:"VMK-1",standart:"711A01NT",security:"",min:375,max:650},
+    {model:"VMK-2",standart:"711A02NT",security:"",min:565,max:840},
+    {model:"VMK-2S",standart:"711A03NT",security:"711A07NT",min:615,max:840},
+    {model:"VMK-3",standart:"711A04NT",security:"711A39NT",min:770,max:1045},
+    {model:"VMK-4",standart:"711A05NT",security:"711A09NT",min:990,max:1265},
+    {model:"VMK-5",standart:"711A06NT",security:"711A10NT",min:1210,max:1485}
   ];
 
   // ============================================================
   // 2. SOL KANAT İÇİN LEVYE KOLLU İSPANYOLET
   // ============================================================
   const levyeKolluIspanyoletler = [
-    {ad:"VGRD-1",kod:"714A01NT",min:550,max:730,resim:"714A01NT.jpg"},
-    {ad:"VGRD-2",kod:"714A02NT",min:730,max:1180,resim:"714A02NT.jpg"},
-    {ad:"VGRD-S",kod:"714A03NT",min:950,max:1400,resim:"714A03NT.jpg"},
-    {ad:"VGRD-3",kod:"714A04NT",min:1180,max:1630,resim:"714A04NT.jpg"},
-    {ad:"VGRD-4",kod:"714A05NT",min:1630,max:2080,resim:"714A05NT.jpg"},
-    {ad:"VGRD-5",kod:"714A06NT",min:1900,max:2350,resim:"714A06NT.jpg"}
+    {ad:"VGRD-1",kod:"714A01NT",min:550,max:730},
+    {ad:"VGRD-2",kod:"714A02NT",min:730,max:1180},
+    {ad:"VGRD-S",kod:"714A03NT",min:950,max:1400},
+    {ad:"VGRD-3",kod:"714A04NT",min:1180,max:1630},
+    {ad:"VGRD-4",kod:"714A05NT",min:1630,max:2080},
+    {ad:"VGRD-5",kod:"714A06NT",min:1900,max:2350}
   ];
 
   // ============================================================
   // 3. FİŞEK SÜRGÜ ÜRÜNLERİ
   // ============================================================
   const fisekSurguUrunler = [
-    {ad:"Fişek Sürgü Üst",kod:"718A05NT",adet:1,resim:"718A05NT.jpg"},
-    {ad:"Fişek Sürgü Alt",kod:"718A04NT",adet:1,resim:"718A04NT.jpg"}
+    {ad:"Fişek Sürgü Üst",kod:"718A05NT",adet:1},
+    {ad:"Fişek Sürgü Alt",kod:"718A04NT",adet:1}
   ];
 
   // ============================================================
   // 4. İSPANYOLET SÜRGÜSÜ ÜRÜNLERİ
   // ============================================================
   const ispanyoletSurguUrunler = [
-    {ad:"Levye Kollu İspanyolet Sürgüsü Üst",kod:"718A08NT",adet:1,resim:"718A08NT.jpg"},
-    {ad:"Levye Kollu İspanyolet Sürgüsü Alt",kod:"718A07NT",adet:1,resim:"718A07NT.jpg"},
-    {ad:"Levye Kollu İsp.Sürgüsü Devirme Karşılıklı",kod:"718A09NT",adet:1,resim:"718A09NT.jpg"}
+    {ad:"Levye Kollu İspanyolet Sürgüsü Üst",kod:"718A08NT",adet:1},
+    {ad:"Levye Kollu İspanyolet Sürgüsü Alt",kod:"718A07NT",adet:1},
+    {ad:"Levye Kollu İsp.Sürgüsü Devirme Karşılıklı",kod:"718A09NT",adet:1}
   ];
 
   // ============================================================
   // 5. KÖŞE DÖNÜŞÜ VCD ÜRÜNLERİ
   // ============================================================
   const koseDonusuUrunler = [
-    {ad:"VCD-3 Üst",kod:"713A03NT",adet:1,resim:"713A03NT.jpg"},
-    {ad:"VCD-4",kod:"713A04NT",adet:1,resim:"713A04NT.jpg"}
+    {ad:"VCD-3 Üst",kod:"713A03NT",adet:1},
+    {ad:"VCD-4",kod:"713A04NT",adet:1}
   ];
 
   // ============================================================
   // 6. ORTA KAYIT ÜRÜNLERİ
   // ============================================================
   const ortaKayitUrunler = [
-    {ad:"Orta Kayıt",kod:"ORK-001",adet:1,resim:"ORK-001.jpg"}
+    {ad:"Orta Kayıt",kod:"ORK-001",adet:1}
   ];
 
   // ============================================================
   // 7. DİĞER ÜRÜNLER (VIL, VAK, VY, VCD-2, VM2035 vb.)
   // ============================================================
   const digerUrunler = {
-    "VIL": {ad:"VIL",kod:"718A03NT",resim:"718A03NT.jpg"},
-    "VIL-0": {ad:"VIL-0",kod:"718A77NT",resim:"718A77NT.jpg"},
-    "VAK": {ad:"VAK",kod:"728A07NT",resim:"728A07NT.jpg"},
-    "VY-9": {ad:"VY-9",kod:"726A22NT",resim:"726A22NT.jpg"},
-    "VY-13": {ad:"VY-13",kod:"726A24NT",resim:"726A24NT.jpg"},
-    "VCD-2": {ad:"VCD-2",kod:"713A02NT",resim:"713A02NT.jpg"},
-    "VM2035-9 240": {ad:"VM2035-9 240",kod:"726A17NT",resim:"726A17NT.jpg"},
-    "VM2045-9": {ad:"VM2045-9",kod:"726A27NT",resim:"726A27NT.jpg"},
-    "VM009": {ad:"VM009",kod:"726A22NT",resim:"726A22NT.jpg"},
-    "VM203513": {ad:"VM203513",kod:"726A18NT",resim:"726A18NT.jpg"},
-    "VM2045": {ad:"VM2045",kod:"726A28NT",resim:"726A28NT.jpg"}
+    "VIL": {ad:"VIL",kod:"718A03NT"},
+    "VIL-0": {ad:"VIL-0",kod:"718A77NT"},
+    "VAK": {ad:"VAK",kod:"728A07NT"},
+    "VY-9": {ad:"VY-9",kod:"726A22NT"},
+    "VY-13": {ad:"VY-13",kod:"726A24NT"},
+    "VCD-2": {ad:"VCD-2",kod:"713A02NT"},
+    "VM2035-9 240": {ad:"VM2035-9 240",kod:"726A17NT"},
+    "VM2045-9": {ad:"VM2045-9",kod:"726A27NT"},
+    "VM009": {ad:"VM009",kod:"726A22NT"},
+    "VM203513": {ad:"VM203513",kod:"726A18NT"},
+    "VM2045": {ad:"VM2045",kod:"726A28NT"}
   };
+
+  // ============================================================
+  // 3D STL GÖRÜNTÜLEYİCİ (Three.js)
+  // ============================================================
+  let scene, camera, renderer, controls;
+  let stlGosteriliyor = false;
+
+  function stlGoster(kod, ad) {
+    const modal = document.getElementById('stlModal');
+    const container = document.getElementById('stl-container');
+    const urunAdi = document.getElementById('modalUrunAdi');
+    const urunKod = document.getElementById('modalUrunKod');
+    
+    // Modal'ı göster
+    modal.classList.add('active');
+    urunAdi.textContent = ad;
+    urunKod.textContent = `Kod: ${kod}`;
+    
+    // Yükleme mesajı
+    container.innerHTML = '<div class="loading-text">⏳ 3D Model Yükleniyor...</div>';
+    
+    // Eğer önceki sahne varsa temizle
+    if (stlGosteriliyor) {
+      if (renderer) {
+        renderer.dispose();
+        renderer.domElement.remove();
+      }
+      stlGosteriliyor = false;
+    }
+
+    // STL dosya yolu - Klasör kontrolü
+    const stlYolu = `stl/${kod}.stl`;
+    
+    console.log(`🔍 STL dosyası aranıyor: ${stlYolu}`);
+
+    // Three.js Sahnesi oluştur
+    const width = container.clientWidth || 600;
+    const height = container.clientHeight || 400;
+
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x1a1a2e);
+
+    // Kamera
+    camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+    camera.position.set(200, 150, 200);
+    camera.lookAt(0, 0, 0);
+
+    // Renderer
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    container.innerHTML = '';
+    container.appendChild(renderer.domElement);
+
+    // Orbit Controls
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 2.0;
+    controls.update();
+
+    // Işıklandırma
+    const ambientLight = new THREE.AmbientLight(0x404060);
+    scene.add(ambientLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+    dirLight.position.set(1, 2, 1);
+    scene.add(dirLight);
+
+    const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.5);
+    dirLight2.position.set(-1, -0.5, -1);
+    scene.add(dirLight2);
+
+    const backLight = new THREE.DirectionalLight(0x4466ff, 0.3);
+    backLight.position.set(0, 0, -1);
+    scene.add(backLight);
+
+    // STL Yükle - Hata yönetimi geliştirildi
+    const loader = new THREE.STLLoader();
+    loader.load(
+      stlYolu,
+      function(geometry) {
+        // Başarılı yükleme
+        console.log(`✅ STL başarıyla yüklendi: ${stlYolu}`);
+        const material = new THREE.MeshPhongMaterial({
+          color: 0x0078d7,
+          specular: 0x111111,
+          shininess: 30,
+          flatShading: false,
+          side: THREE.DoubleSide
+        });
+        const mesh = new THREE.Mesh(geometry, material);
+        
+        // Modeli ortala
+        geometry.computeBoundingBox();
+        const box = geometry.boundingBox;
+        if (box) {
+          const center = new THREE.Vector3();
+          box.getCenter(center);
+          mesh.position.sub(center);
+          
+          // Modeli uygun boyuta getir
+          const size = box.max.distanceTo(box.min);
+          if (size > 0) {
+            const scale = 150 / size;
+            mesh.scale.set(scale, scale, scale);
+          }
+        }
+        
+        scene.add(mesh);
+        stlGosteriliyor = true;
+        
+        // Render döngüsü
+        animate();
+      },
+      function(xhr) {
+        // Yükleme ilerlemesi
+        if (xhr.total > 0) {
+          const progress = (xhr.loaded / xhr.total * 100).toFixed(0);
+          container.innerHTML = `<div class="loading-text">⏳ 3D Model Yükleniyor... %${progress}</div>`;
+        }
+      },
+      function(error) {
+        // Hata durumu - Detaylı hata mesajı
+        console.error('❌ STL yüklenemedi:', error);
+        console.error(`📁 Aranan dosya: ${stlYolu}`);
+        
+        let hataMesaji = '❌ 3D Model Bulunamadı!';
+        let hataDetay = `Dosya: ${stlYolu}\n`;
+        hataDetay += `Lütfen stl/ klasöründe "${kod}.stl" dosyasının olduğundan emin olun.`;
+        
+        // Klasör kontrolü için öneri
+        const possiblePaths = [
+          `stl/${kod}.stl`,
+          `./stl/${kod}.stl`,
+          `../stl/${kod}.stl`
+        ];
+        hataDetay += '\n\n🔍 Aranan yollar:\n' + possiblePaths.join('\n');
+        
+        container.innerHTML = `
+          <div class="loading-text" style="color:#ff6b6b;">
+            ${hataMesaji}
+            <div class="hata-detay">${hataDetay.replace(/\n/g, '<br>')}</div>
+          </div>
+        `;
+      }
+    );
+  }
+
+  function animate() {
+    if (!stlGosteriliyor) return;
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+  }
+
+  function kapatStlModal() {
+    const modal = document.getElementById('stlModal');
+    modal.classList.remove('active');
+    if (stlGosteriliyor) {
+      if (renderer) {
+        renderer.dispose();
+        renderer.domElement.remove();
+      }
+      stlGosteriliyor = false;
+    }
+  }
+
+  // Modal dışına tıklayınca kapat
+  document.getElementById('stlModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      kapatStlModal();
+    }
+  });
+
+  // ESC tuşu ile kapat
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      kapatStlModal();
+    }
+  });
+
+  // Pencere boyutu değişince renderer'ı güncelle
+  window.addEventListener('resize', function() {
+    if (stlGosteriliyor && renderer) {
+      const container = document.getElementById('stl-container');
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      if (width > 0 && height > 0) {
+        renderer.setSize(width, height);
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+      }
+    }
+  });
+
+  // ============================================================
+  // TABLO SATIRI OLUŞTURMA (STL linki ile)
+  // ============================================================
+  function satirOlustur(ad, kod, adet) {
+    return `<tr><td>${ad}</td><td>${kod}</td><td>${adet}</td><td><span class="stl-link" onclick="stlGoster('${kod}','${ad}')">🔄 3D Gör</span></td></tr>`;
+  }
+
+  function satirOlusturDiger(ad, kod, adet) {
+    return satirOlustur(ad, kod, adet);
+  }
 
   // ============================================================
   // ORTAK YARDIMCI FONKSİYONLAR
@@ -432,65 +672,6 @@
   }
 
   // ============================================================
-  // RESİM GÖSTERME FONKSİYONU
-  // ============================================================
-  function resimGoster(kod, ad) {
-    const modal = document.getElementById('resimModal');
-    const img = document.getElementById('modalResim');
-    const urunAdi = document.getElementById('modalUrunAdi');
-    const urunKod = document.getElementById('modalUrunKod');
-    
-    // Resim yolunu oluştur (image/ klasöründen)
-    const resimYolu = `image/${kod}.jpg`;
-    
-    img.src = resimYolu;
-    img.alt = ad;
-    urunAdi.textContent = ad;
-    urunKod.textContent = `Kod: ${kod}`;
-    
-    // Resim yüklenmezse hata mesajı göster
-    img.onerror = function() {
-      img.src = '';
-      img.alt = 'Resim bulunamadı';
-      urunAdi.textContent = ad + ' (Resim Yok)';
-    };
-    
-    modal.classList.add('active');
-  }
-
-  function kapatModal() {
-    document.getElementById('resimModal').classList.remove('active');
-  }
-
-  // Modal dışına tıklayınca kapat
-  document.getElementById('resimModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-      kapatModal();
-    }
-  });
-
-  // ESC tuşu ile kapat
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-      kapatModal();
-    }
-  });
-
-  // ============================================================
-  // TABLO SATIRI OLUŞTURMA (resim linki ile)
-  // ============================================================
-  function satirOlustur(ad, kod, adet, resim) {
-    const resimLink = resim ? `<span class="resim-link" onclick="resimGoster('${kod}','${ad}')">📷 Gör</span>` : '-';
-    return `<tr><td>${ad}</td><td>${kod}</td><td>${adet}</td><td>${resimLink}</td></tr>`;
-  }
-
-  function satirOlusturDiger(ad, kod, adet) {
-    const urun = digerUrunler[ad];
-    const resim = urun ? urun.resim : null;
-    return satirOlustur(ad, kod, adet, resim);
-  }
-
-  // ============================================================
   // MODÜL 1: ÇİFT AÇILIM TEK KANAT HESAPLAMA (TAM)
   // ============================================================
   function hesaplaCiftAcilimTekKanat(genislik, uzunluk, guvenlik, aks, acilim) {
@@ -500,36 +681,34 @@
       : ispanyoletler.filter(x => !x.ad.endsWith("S"));
 
     let ispanyolet = liste.find(x => uzunluk >= x.min && uzunluk <= x.max);
-    let ispAd, ispKod, ispResim;
+    let ispAd, ispKod;
     if (!ispanyolet) {
       let enBuyuk = liste.reduce((a, b) => a.max > b.max ? a : b);
-      ispAd = enBuyuk.ad; ispKod = enBuyuk.kod; ispResim = enBuyuk.resim;
+      ispAd = enBuyuk.ad; ispKod = enBuyuk.kod;
     } else {
-      ispAd = ispanyolet.ad; ispKod = ispanyolet.kod; ispResim = ispanyolet.resim;
+      ispAd = ispanyolet.ad; ispKod = ispanyolet.kod;
     }
 
     const uzunlukVil = uzunlukIcinVilHesapla(uzunluk, ispanyolet, liste);
     const genislikVil = genislikIcinVilHesapla(genislik, 1485);
 
     let makas = makaslar.find(x => genislik >= x.min && genislik <= x.max);
-    let makasModel = '', makasKod = '', makasResim = '';
+    let makasModel = '', makasKod = '';
     if (makas) {
       makasModel = makas.model;
       makasKod = (guvenlik === "YÜKSEK GÜVENLİK" && makas.security !== "") ? makas.security : makas.standart;
-      makasResim = makas.resim;
     } else {
       let enBuyukMakas = makaslar.reduce((a, b) => a.max > b.max ? a : b);
       makasModel = enBuyukMakas.model;
       makasKod = (guvenlik === "YÜKSEK GÜVENLİK" && enBuyukMakas.security !== "") ? enBuyukMakas.security : enBuyukMakas.standart;
-      makasResim = enBuyukMakas.resim;
     }
 
-    html += satirOlustur(ispAd, ispKod, 1, ispResim);
+    html += satirOlustur(ispAd, ispKod, 1);
     if (uzunlukVil.vilCount > 0) html += satirOlusturDiger("VIL", "718A03NT", uzunlukVil.vilCount);
     if (uzunlukVil.vil0Count > 0) html += satirOlusturDiger("VIL-0", "718A77NT", uzunlukVil.vil0Count);
     if (genislikVil.vilCount > 0) html += satirOlusturDiger("VIL", "718A03NT", genislikVil.vilCount);
     if (genislikVil.vil0Count > 0) html += satirOlusturDiger("VIL-0", "718A77NT", genislikVil.vil0Count);
-    html += satirOlustur(makasModel, makasKod, 1, makasResim);
+    html += satirOlustur(makasModel, makasKod, 1);
 
     if (acilim === "YANDAN") {
       html += satirOlusturDiger("VAK", "728A07NT", 1);
@@ -562,15 +741,15 @@
       : ispanyoletler.filter(x => !x.ad.endsWith("S"));
 
     let ispanyolet = liste.find(x => uzunluk >= x.min && uzunluk <= x.max);
-    let ispAd, ispKod, ispResim;
+    let ispAd, ispKod;
     if (!ispanyolet) {
       let enBuyuk = liste.reduce((a, b) => a.max > b.max ? a : b);
-      ispAd = enBuyuk.ad; ispKod = enBuyuk.kod; ispResim = enBuyuk.resim;
+      ispAd = enBuyuk.ad; ispKod = enBuyuk.kod;
     } else {
-      ispAd = ispanyolet.ad; ispKod = ispanyolet.kod; ispResim = ispanyolet.resim;
+      ispAd = ispanyolet.ad; ispKod = ispanyolet.kod;
     }
 
-    html += satirOlustur(ispAd, ispKod, 1, ispResim);
+    html += satirOlustur(ispAd, ispKod, 1);
 
     return html;
   }
@@ -595,17 +774,17 @@
     
     if (kilitTip === "FISEK_SURGU") {
       fisekSurguUrunler.forEach(urun => {
-        html += satirOlustur(urun.ad, urun.kod, urun.adet, urun.resim);
+        html += satirOlustur(urun.ad, urun.kod, urun.adet);
       });
     } else if (kilitTip === "ISPANYOLET_SURGUSU") {
       let levyeIsp = levyeKolluIspanyoletler.find(x => uzunluk >= x.min && uzunluk <= x.max);
       if (!levyeIsp) {
         levyeIsp = levyeKolluIspanyoletler.reduce((a, b) => a.max > b.max ? a : b);
       }
-      html += satirOlustur(levyeIsp.ad, levyeIsp.kod, 1, levyeIsp.resim);
+      html += satirOlustur(levyeIsp.ad, levyeIsp.kod, 1);
       
       ispanyoletSurguUrunler.forEach(urun => {
-        html += satirOlustur(urun.ad, urun.kod, urun.adet, urun.resim);
+        html += satirOlustur(urun.ad, urun.kod, urun.adet);
       });
     } else {
       // KÖŞE DÖNÜŞÜ
@@ -613,10 +792,10 @@
       if (!levyeIsp) {
         levyeIsp = levyeKolluIspanyoletler.reduce((a, b) => a.max > b.max ? a : b);
       }
-      html += satirOlustur(levyeIsp.ad, levyeIsp.kod, 1, levyeIsp.resim);
+      html += satirOlustur(levyeIsp.ad, levyeIsp.kod, 1);
       
       koseDonusuUrunler.forEach(urun => {
-        html += satirOlustur(urun.ad, urun.kod, urun.adet, urun.resim);
+        html += satirOlustur(urun.ad, urun.kod, urun.adet);
       });
     }
 
@@ -624,7 +803,7 @@
     if (ortaKayit === "VAR") {
       html += `<tr class="mod-baslik"><td colspan="4">*** ORTA KAYIT ***</td></tr>`;
       ortaKayitUrunler.forEach(urun => {
-        html += satirOlustur(urun.ad, urun.kod, urun.adet, urun.resim);
+        html += satirOlustur(urun.ad, urun.kod, urun.adet);
       });
     }
 
@@ -696,7 +875,7 @@
     let sonucHtml = `
       ${infoHtml}
       <table>
-        <tr><th>ÜRÜN ADI</th><th>KOD</th><th>ADET</th><th>ÜRÜN RESMİ</th></tr>
+        <tr><th>ÜRÜN ADI</th><th>KOD</th><th>ADET</th><th>3D GÖRÜNÜM</th></tr>
         ${tableRows}
       </table>
     `;
