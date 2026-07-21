@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Donanım Hesaplama</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f4f6f8;
+      padding: 25px;
+      margin: 0;
+    }
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #0078d7;
+      margin-top: 0.2rem;
+    }
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      margin: 20px 0 25px 0;
+    }
+    .button-group button {
+      flex: 1 1 160px;
+      padding: 12px 10px;
+      border: none;
+      background: #e5e9ed;
+      color: #1e293b;
+      border-radius: 30px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      letter-spacing: 0.3px;
+    }
+    .button-group button.active {
+      background: #0078d7;
+      color: white;
+      box-shadow: 0 4px 10px rgba(0,120,215,0.3);
+    }
+    .button-group button:hover {
+      background: #d0d7df;
+    }
+    .button-group button.active:hover {
+      background: #0063b0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px 25px;
+    }
+    label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 5px;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      background: white;
+    }
+    input::placeholder {
+      color: #999;
+    }
+    .hesap-btn {
+      width: 100%;
+      margin-top: 28px;
+      padding: 14px;
+      border: none;
+      background: #0078d7;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 1.1rem;
+      transition: background 0.2s;
+    }
+    .hesap-btn:hover {
+      background: #005ea8;
+    }
+    .info {
+      margin-top: 25px;
+      padding: 15px 18px;
+      background: #eef7ff;
+      border-radius: 8px;
+      border-left: 5px solid #0078d7;
+    }
+    table {
+      width: 100%;
+      margin-top: 15px;
+      border-collapse: collapse;
+    }
+    th {
+      background: #0078d7;
+      color: white;
+      padding: 10px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: left;
+    }
+    .info-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 28px;
+      margin-bottom: 6px;
+    }
+    .info-grid span {
+      font-weight: 500;
+    }
+    .mod-baslik {
+      background: #e9ecef;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    /* RESİM ÖNİZLEME MODAL */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.85);
+      justify-content: center;
+      align-items: center;
+    }
+    .modal.active {
+      display: flex;
+    }
+    .modal-content {
+      max-width: 80%;
+      max-height: 85%;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      position: relative;
+      text-align: center;
+    }
+    .modal-content img {
+      max-width: 100%;
+      max-height: 70vh;
+      border-radius: 6px;
+    }
+    .modal-content .urun-adi {
+      margin-top: 12px;
+      font-weight: 700;
+      font-size: 18px;
+      color: #1a2634;
+    }
+    .modal-content .urun-kod {
+      font-size: 14px;
+      color: #6b7a8f;
+    }
+    .modal-close {
+      position: absolute;
+      top: 10px;
+      right: 18px;
+      font-size: 32px;
+      font-weight: 700;
+      color: #1a2634;
+      cursor: pointer;
+      transition: 0.2s;
+      background: none;
+      border: none;
+      line-height: 1;
+    }
+    .modal-close:hover {
+      color: #0078d7;
+      transform: scale(1.1);
+    }
+
+    .resim-link {
+      color: #0078d7;
+      cursor: pointer;
+      text-decoration: underline;
+      font-weight: 500;
+    }
+    .resim-link:hover {
+      color: #005ea8;
+    }
+
+    @media (max-width: 700px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+      .button-group button {
+        flex: 1 1 100%;
+      }
+      .modal-content {
+        max-width: 95%;
+        padding: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>DONANIM HESAPLAMA</h1>
+
+  <!-- 3 BUTON -->
+  <div class="button-group">
+    <button id="btnTekKanat" class="active">1 - Çift Açılım Tek Kanat</button>
+    <button id="btnCiftKanat">2 - Çift Açılım Çift Kanat</button>
+    <button id="btnTekAcilim">3 - Tek Açılım</button>
+  </div>
+
+  <!-- FORM ALANI -->
+  <div id="formAlan" class="grid">
+    <div id="sagGenislikDiv">
+      <label>Kanat Genişliği (mm)</label>
+      <input type="number" id="genislik" placeholder="375 - 1485 mm">
+    </div>
+    <div id="solGenislikDiv" style="display:none;">
+      <label>Sol Kanat Genişliği (mm)</label>
+      <input type="number" id="solGenislik" placeholder="375 - 1485 mm">
+    </div>
+    <div>
+      <label>Kanat Uzunluğu (mm)</label>
+      <input type="number" id="uzunluk" placeholder="480 - 2350 mm">
+    </div>
+    <div>
+      <label>Güvenlik</label>
+      <select id="guvenlik">
+        <option>STANDART</option>
+        <option>YÜKSEK GÜVENLİK</option>
+      </select>
+    </div>
+    <div>
+      <label>AKS</label>
+      <select id="aks">
+        <option value="9">9 AKS</option>
+        <option value="13">13 AKS</option>
+      </select>
+    </div>
+    <div id="acilimDiv">
+      <label>Çift Açılım Şekli</label>
+      <select id="acilim">
+        <option value="YANDAN">YANDAN DEVİRME</option>
+        <option value="ALTTAN">ALTTAN DEVİRME</option>
+      </select>
+    </div>
+    <!-- ÇİFT KANAT TİPİ -->
+    <div id="ciftKanatTipDiv" style="display:none;">
+      <label>Çift Kanat Tipi</label>
+      <select id="ciftKanatTip">
+        <option value="TİP1">ÇİFT KANAT ÇİFT AÇILIM</option>
+        <option value="TİP2">ÇİFT KANAT TEK AÇILIM</option>
+      </select>
+    </div>
+    <!-- ORTA KAYIT DURUMU -->
+    <div id="ortaKayitDiv" style="display:none;">
+      <label>Orta Kayıt Durumu</label>
+      <select id="ortaKayit">
+        <option value="VAR">VAR</option>
+        <option value="YOK">YOK</option>
+      </select>
+    </div>
+    <!-- KİLİT TİPİ -->
+    <div id="kilitTipDiv" style="display:none;">
+      <label>Kilit Tipi</label>
+      <select id="kilitTip">
+        <option value="KOSE_DONUSU">KÖŞE DÖNÜŞÜ İLE</option>
+        <option value="FISEK_SURGU">FİŞEK SÜRGÜ İLE</option>
+        <option value="ISPANYOLET_SURGUSU">İSPANYOLET SÜRGÜSÜ</option>
+      </select>
+    </div>
+  </div>
+
+  <button class="hesap-btn" onclick="hesapla()">HESAPLA</button>
+  <div id="sonuc"></div>
+</div>
+
+<!-- RESİM ÖNİZLEME MODAL -->
+<div id="resimModal" class="modal">
+  <div class="modal-content">
+    <button class="modal-close" onclick="kapatModal()">&times;</button>
+    <img id="modalResim" src="" alt="Ürün Resmi">
+    <div class="urun-adi" id="modalUrunAdi"></div>
+    <div class="urun-kod" id="modalUrunKod"></div>
+  </div>
+</div>
+
+<script>
+  // ============================================================
+  // 1. MODÜL: ÇİFT AÇILIM TEK KANAT (MEVCUT REFERANS)
+  // ============================================================
+  const ispanyoletler = [
+    {ad:"VGR-1",kod:"710A01NT",min:480,max:730,resim:"710A01NT.jpg"},
+    {ad:"VGR-2",kod:"710A03NT",min:730,max:1180,resim:"710A03NT.jpg"},
+    {ad:"VGR-3",kod:"710A05NT",min:1180,max:1630,resim:"710A05NT.jpg"},
+    {ad:"VGR-4",kod:"710A06NT",min:1630,max:2080,resim:"710A06NT.jpg"},
+    {ad:"VGR-5",kod:"710A07NT",min:1900,max:2350,resim:"710A07NT.jpg"},
+    {ad:"VGR-1S",kod:"710A02NT",min:580,max:730,resim:"710A02NT.jpg"},
+    {ad:"VGR-S",kod:"710A04NT",min:950,max:1400,resim:"710A04NT.jpg"},
+    {ad:"VGR-ES",kod:"710B17NT",min:950,max:1400,resim:"710B17NT.jpg"},
+    {ad:"VGR-E3",kod:"710A65NT",min:1180,max:1630,resim:"710A65NT.jpg"},
+    {ad:"VGR-E4",kod:"710A66NT",min:1630,max:2080,resim:"710A66NT.jpg"},
+    {ad:"VGR-E5",kod:"710B15NT",min:1900,max:2350,resim:"710B15NT.jpg"}
+  ];
+
+  const makaslar = [
+    {model:"VMK-1",standart:"711A01NT",security:"",min:375,max:650,resim:"711A01NT.jpg"},
+    {model:"VMK-2",standart:"711A02NT",security:"",min:565,max:840,resim:"711A02NT.jpg"},
+    {model:"VMK-2S",standart:"711A03NT",security:"711A07NT",min:615,max:840,resim:"711A03NT.jpg"},
+    {model:"VMK-3",standart:"711A04NT",security:"711A39NT",min:770,max:1045,resim:"711A04NT.jpg"},
+    {model:"VMK-4",standart:"711A05NT",security:"711A09NT",min:990,max:1265,resim:"711A05NT.jpg"},
+    {model:"VMK-5",standart:"711A06NT",security:"711A10NT",min:1210,max:1485,resim:"711A06NT.jpg"}
+  ];
+
+  // ============================================================
+  // 2. SOL KANAT İÇİN LEVYE KOLLU İSPANYOLET
+  // ============================================================
+  const levyeKolluIspanyoletler = [
+    {ad:"VGRD-1",kod:"714A01NT",min:550,max:730,resim:"714A01NT.jpg"},
+    {ad:"VGRD-2",kod:"714A02NT",min:730,max:1180,resim:"714A02NT.jpg"},
+    {ad:"VGRD-S",kod:"714A03NT",min:950,max:1400,resim:"714A03NT.jpg"},
+    {ad:"VGRD-3",kod:"714A04NT",min:1180,max:1630,resim:"714A04NT.jpg"},
+    {ad:"VGRD-4",kod:"714A05NT",min:1630,max:2080,resim:"714A05NT.jpg"},
+    {ad:"VGRD-5",kod:"714A06NT",min:1900,max:2350,resim:"714A06NT.jpg"}
+  ];
+
+  // ============================================================
+  // 3. FİŞEK SÜRGÜ ÜRÜNLERİ
+  // ============================================================
+  const fisekSurguUrunler = [
+    {ad:"Fişek Sürgü Üst",kod:"718A05NT",adet:1,resim:"718A05NT.jpg"},
+    {ad:"Fişek Sürgü Alt",kod:"718A04NT",adet:1,resim:"718A04NT.jpg"}
+  ];
+
+  // ============================================================
+  // 4. İSPANYOLET SÜRGÜSÜ ÜRÜNLERİ
+  // ============================================================
+  const ispanyoletSurguUrunler = [
+    {ad:"Levye Kollu İspanyolet Sürgüsü Üst",kod:"718A08NT",adet:1,resim:"718A08NT.jpg"},
+    {ad:"Levye Kollu İspanyolet Sürgüsü Alt",kod:"718A07NT",adet:1,resim:"718A07NT.jpg"},
+    {ad:"Levye Kollu İsp.Sürgüsü Devirme Karşılıklı",kod:"718A09NT",adet:1,resim:"718A09NT.jpg"}
+  ];
+
+  // ============================================================
+  // 5. KÖŞE DÖNÜŞÜ VCD ÜRÜNLERİ
+  // ============================================================
+  const koseDonusuUrunler = [
+    {ad:"VCD-3 Üst",kod:"713A03NT",adet:1,resim:"713A03NT.jpg"},
+    {ad:"VCD-4",kod:"713A04NT",adet:1,resim:"713A04NT.jpg"}
+  ];
+
+  // ============================================================
+  // 6. ORTA KAYIT ÜRÜNLERİ
+  // ============================================================
+  const ortaKayitUrunler = [
+    {ad:"Orta Kayıt",kod:"ORK-001",adet:1,resim:"ORK-001.jpg"}
+  ];
+
+  // ============================================================
+  // 7. DİĞER ÜRÜNLER (VIL, VAK, VY, VCD-2, VM2035 vb.)
+  // ============================================================
+  const digerUrunler = {
+    "VIL": {ad:"VIL",kod:"718A03NT",resim:"718A03NT.jpg"},
+    "VIL-0": {ad:"VIL-0",kod:"718A77NT",resim:"718A77NT.jpg"},
+    "VAK": {ad:"VAK",kod:"728A07NT",resim:"728A07NT.jpg"},
+    "VY-9": {ad:"VY-9",kod:"726A22NT",resim:"726A22NT.jpg"},
+    "VY-13": {ad:"VY-13",kod:"726A24NT",resim:"726A24NT.jpg"},
+    "VCD-2": {ad:"VCD-2",kod:"713A02NT",resim:"713A02NT.jpg"},
+    "VM2035-9 240": {ad:"VM2035-9 240",kod:"726A17NT",resim:"726A17NT.jpg"},
+    "VM2045-9": {ad:"VM2045-9",kod:"726A27NT",resim:"726A27NT.jpg"},
+    "VM009": {ad:"VM009",kod:"726A22NT",resim:"726A22NT.jpg"},
+    "VM203513": {ad:"VM203513",kod:"726A18NT",resim:"726A18NT.jpg"},
+    "VM2045": {ad:"VM2045",kod:"726A28NT",resim:"726A28NT.jpg"}
+  };
+
+  // ============================================================
+  // RESİM GÖSTERME FONKSİYONU
+  // ============================================================
+  function resimGoster(kod, ad) {
+    const modal = document.getElementById('resimModal');
+    const img = document.getElementById('modalResim');
+    const urunAdi = document.getElementById('modalUrunAdi');
+    const urunKod = document.getElementById('modalUrunKod');
+    
+    // Resim yolunu oluştur (image/ klasöründen)
+    const resimYolu = `image/${kod}.jpg`;
+    
+    img.src = resimYolu;
+    img.alt = ad;
+    urunAdi.textContent = ad;
+    urunKod.textContent = `Kod: ${kod}`;
+    
+    // Resim yüklenmezse hata mesajı göster
+    img.onerror = function() {
+      img.src = '';
+      img.alt = 'Resim bulunamadı';
+      urunAdi.textContent = ad + ' (Resim Yok)';
+      urunKod.textContent = `Kod: ${kod} - image/${kod}.jpg bulunamadı`;
+    };
+    
+    modal.classList.add('active');
+  }
+
+  function kapatModal() {
+    document.getElementById('resimModal').classList.remove('active');
+  }
+
+  // Modal dışına tıklayınca kapat
+  document.getElementById('resimModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      kapatModal();
+    }
+  });
+
+  // ESC tuşu ile kapat
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      kapatModal();
+    }
+  });
+
+  // ============================================================
+  // TABLO SATIRI OLUŞTURMA (resim linki ile)
+  // ============================================================
+  function satirOlustur(ad, kod, adet, resim) {
+    const resimLink = resim ? `<span class="resim-link" onclick="resimGoster('${kod}','${ad}')">📷 Gör</span>` : '-';
+    return `<tr><td>${ad}</td><td>${kod}</td><td>${adet}</td><td>${resimLink}</td></tr>`;
+  }
+
+  function satirOlusturDiger(ad, kod, adet) {
+    const urun = digerUrunler[ad];
+    const resim = urun ? urun.resim : null;
+    return satirOlustur(ad, kod, adet, resim);
+  }
+
+  // ============================================================
+  // ORTAK YARDIMCI FONKSİYONLAR
+  // ============================================================
+  function genislikIcinVilHesapla(genislik, maxGenislikSiniri = 1485) {
+    let vilCount = 0;
+    let vil0Count = 0;
+    if (genislik > maxGenislikSiniri) {
+      let fark = genislik - maxGenislikSiniri;
+      while (fark > 660) {
+        vilCount++;
+        fark -= 660;
+      }
+      if (fark > 160) {
+        vilCount++;
+      } else if (fark > 0) {
+        vil0Count = 1;
+      }
+    }
+    return { vilCount, vil0Count };
+  }
+
+  function uzunlukIcinVilHesapla(uzunluk, ispanyolet, liste) {
+    let vilCount = 0, vil0Count = 0;
+    let fark = 0;
+    if (!ispanyolet) {
+      let enBuyuk = liste.reduce((a, b) => a.max > b.max ? a : b);
+      fark = uzunluk - enBuyuk.max;
+    } else if (ispanyolet.max < uzunluk) {
+      fark = uzunluk - ispanyolet.max;
+    }
+    if (fark > 0) {
+      let tempFark = fark;
+      while (tempFark > 660) { vilCount++; tempFark -= 660; }
+      if (tempFark > 160) vilCount++;
+      else if (tempFark > 0) vil0Count = 1;
+    }
+    return { vilCount, vil0Count };
+  }
+
+  // ============================================================
+  // MODÜL 1: ÇİFT AÇILIM TEK KANAT HESAPLAMA (TAM)
+  // ============================================================
+  function hesaplaCiftAcilimTekKanat(genislik, uzunluk, guvenlik, aks, acilim) {
+    let html = '';
+    let liste = guvenlik === "YÜKSEK GÜVENLİK" 
+      ? ispanyoletler.filter(x => x.ad.endsWith("S"))
+      : ispanyoletler.filter(x => !x.ad.endsWith("S"));
+
+    let ispanyolet = liste.find(x => uzunluk >= x.min && uzunluk <= x.max);
+    let ispAd, ispKod, ispResim;
+    if (!ispanyolet) {
+      let enBuyuk = liste.reduce((a, b) => a.max > b.max ? a : b);
+      ispAd = enBuyuk.ad; ispKod = enBuyuk.kod; ispResim = enBuyuk.resim;
+    } else {
+      ispAd = ispanyolet.ad; ispKod = ispanyolet.kod; ispResim = ispanyolet.resim;
+    }
+
+    const uzunlukVil = uzunlukIcinVilHesapla(uzunluk, ispanyolet, liste);
+    const genislikVil = genislikIcinVilHesapla(genislik, 1485);
+
+    let makas = makaslar.find(x => genislik >= x.min && genislik <= x.max);
+    let makasModel = '', makasKod = '', makasResim = '';
+    if (makas) {
+      makasModel = makas.model;
+      makasKod = (guvenlik === "YÜKSEK GÜVENLİK" && makas.security !== "") ? makas.security : makas.standart;
+      makasResim = makas.resim;
+    } else {
+      let enBuyukMakas = makaslar.reduce((a, b) => a.max > b.max ? a : b);
+      makasModel = enBuyukMakas.model;
+      makasKod = (guvenlik === "YÜKSEK GÜVENLİK" && enBuyukMakas.security !== "") ? enBuyukMakas.security : enBuyukMakas.standart;
+      makasResim = enBuyukMakas.resim;
+    }
+
+    html += satirOlustur(ispAd, ispKod, 1, ispResim);
+    if (uzunlukVil.vilCount > 0) html += satirOlusturDiger("VIL", "718A03NT", uzunlukVil.vilCount);
+    if (uzunlukVil.vil0Count > 0) html += satirOlusturDiger("VIL-0", "718A77NT", uzunlukVil.vil0Count);
+    if (genislikVil.vilCount > 0) html += satirOlusturDiger("VIL", "718A03NT", genislikVil.vilCount);
+    if (genislikVil.vil0Count > 0) html += satirOlusturDiger("VIL-0", "718A77NT", genislikVil.vil0Count);
+    html += satirOlustur(makasModel, makasKod, 1, makasResim);
+
+    if (acilim === "YANDAN") {
+      html += satirOlusturDiger("VAK", "728A07NT", 1);
+      if (aks === "9") html += satirOlusturDiger("VY-9", "726A22NT", 1);
+      if (aks === "13") html += satirOlusturDiger("VY-13", "726A24NT", 1);
+    }
+    if (acilim === "ALTTAN") {
+      html += satirOlusturDiger("VCD-2", "713A02NT", 1);
+      if (aks === "9") {
+        html += satirOlusturDiger("VM2035-9 240", "726A17NT", 1);
+        html += satirOlusturDiger("VM2045-9", "726A27NT", 1);
+        html += satirOlusturDiger("VM009", "726A22NT", 1);
+      }
+      if (aks === "13") {
+        html += satirOlusturDiger("VM203513", "726A18NT", 1);
+        html += satirOlusturDiger("VM2045", "726A28NT", 1);
+      }
+    }
+
+    return html;
+  }
+
+  // ============================================================
+  // MODÜL 1B: ÇİFT AÇILIM TEK KANAT (SADECE VGR)
+  // ============================================================
+  function hesaplaCiftAcilimTekKanatSadeceVgr(genislik, uzunluk, guvenlik) {
+    let html = '';
+    let liste = guvenlik === "YÜKSEK GÜVENLİK" 
+      ? ispanyoletler.filter(x => x.ad.endsWith("S"))
+      : ispanyoletler.filter(x => !x.ad.endsWith("S"));
+
+    let ispanyolet = liste.find(x => uzunluk >= x.min && uzunluk <= x.max);
+    let ispAd, ispKod, ispResim;
+    if (!ispanyolet) {
+      let enBuyuk = liste.reduce((a, b) => a.max > b.max ? a : b);
+      ispAd = enBuyuk.ad; ispKod = enBuyuk.kod; ispResim = enBuyuk.resim;
+    } else {
+      ispAd = ispanyolet.ad; ispKod = ispanyolet.kod; ispResim = ispanyolet.resim;
+    }
+
+    html += satirOlustur(ispAd, ispKod, 1, ispResim);
+
+    return html;
+  }
+
+  // ============================================================
+  // MODÜL 2: ÇİFT AÇILIM ÇİFT KANAT HESAPLAMA
+  // ============================================================
+  function hesaplaCiftAcilimCiftKanat(sagGenislik, solGenislik, uzunluk, guvenlik, aks, acilim, ciftKanatTip, kilitTip, ortaKayit) {
+    let html = '';
+    
+    // --- SAĞ KANAT ---
+    html += `<tr class="mod-baslik"><td colspan="4">*** SAĞ KANAT ***</td></tr>`;
+    
+    if (ciftKanatTip === "TİP2") {
+      html += hesaplaCiftAcilimTekKanatSadeceVgr(sagGenislik, uzunluk, guvenlik);
+    } else {
+      html += hesaplaCiftAcilimTekKanat(sagGenislik, uzunluk, guvenlik, aks, acilim);
+    }
+    
+    // --- SOL KANAT ---
+    html += `<tr class="mod-baslik"><td colspan="4">*** SOL KANAT (${kilitTip}) ***</td></tr>`;
+    
+    if (kilitTip === "FISEK_SURGU") {
+      fisekSurguUrunler.forEach(urun => {
+        html += satirOlustur(urun.ad, urun.kod, urun.adet, urun.resim);
+      });
+    } else if (kilitTip === "ISPANYOLET_SURGUSU") {
+      let levyeIsp = levyeKolluIspanyoletler.find(x => uzunluk >= x.min && uzunluk <= x.max);
+      if (!levyeIsp) {
+        levyeIsp = levyeKolluIspanyoletler.reduce((a, b) => a.max > b.max ? a : b);
+      }
+      html += satirOlustur(levyeIsp.ad, levyeIsp.kod, 1, levyeIsp.resim);
+      
+      ispanyoletSurguUrunler.forEach(urun => {
+        html += satirOlustur(urun.ad, urun.kod, urun.adet, urun.resim);
+      });
+    } else {
+      // KÖŞE DÖNÜŞÜ
+      let levyeIsp = levyeKolluIspanyoletler.find(x => uzunluk >= x.min && uzunluk <= x.max);
+      if (!levyeIsp) {
+        levyeIsp = levyeKolluIspanyoletler.reduce((a, b) => a.max > b.max ? a : b);
+      }
+      html += satirOlustur(levyeIsp.ad, levyeIsp.kod, 1, levyeIsp.resim);
+      
+      koseDonusuUrunler.forEach(urun => {
+        html += satirOlustur(urun.ad, urun.kod, urun.adet, urun.resim);
+      });
+    }
+
+    // --- ORTA KAYIT ---
+    if (ortaKayit === "VAR") {
+      html += `<tr class="mod-baslik"><td colspan="4">*** ORTA KAYIT ***</td></tr>`;
+      ortaKayitUrunler.forEach(urun => {
+        html += satirOlustur(urun.ad, urun.kod, urun.adet, urun.resim);
+      });
+    }
+
+    return html;
+  }
+
+  // ============================================================
+  // MODÜL 3: TEK AÇILIM HESAPLAMA
+  // ============================================================
+  function hesaplaTekAcilim(genislik, uzunluk, guvenlik, aks) {
+    let html = '';
+    html += `<tr><td>TEK AÇILIM ÜRÜN</td><td>TEK-KOD</td><td>1</td><td>-</td></tr>`;
+    if (aks === "9") {
+      html += `<tr><td>TEK AÇILIM AKS-9</td><td>TEK-9-KOD</td><td>1</td><td>-</td></tr>`;
+    }
+    if (aks === "13") {
+      html += `<tr><td>TEK AÇILIM AKS-13</td><td>TEK-13-KOD</td><td>1</td><td>-</td></tr>`;
+    }
+    return html;
+  }
+
+  // ============================================================
+  // ANA HESAPLA FONKSİYONU
+  // ============================================================
+  function hesapla() {
+    const modCiftKanat = document.getElementById('btnCiftKanat').classList.contains('active');
+    const modTekAcilim = document.getElementById('btnTekAcilim').classList.contains('active');
+
+    let genislik = Number(document.getElementById('genislik').value);
+    let solGenislik = Number(document.getElementById('solGenislik').value);
+    let uzunluk = Number(document.getElementById('uzunluk').value);
+    let guvenlik = document.getElementById('guvenlik').value;
+    let aks = document.getElementById('aks').value;
+    let acilim = document.getElementById('acilim').value;
+    let ciftKanatTip = document.getElementById('ciftKanatTip').value;
+    let kilitTip = document.getElementById('kilitTip').value;
+    let ortaKayit = document.getElementById('ortaKayit').value;
+
+    if (!uzunluk) { alert('Kanat Uzunluğu giriniz'); return; }
+    if (!genislik) { alert('Kanat Genişliği giriniz'); return; }
+    if (modCiftKanat && !solGenislik) { alert('Sol Kanat Genişliği giriniz'); return; }
+
+    let infoHtml = `
+      <div class="info">
+        <div class="info-grid">
+          <span><b>Kanat Uzunluğu:</b> ${uzunluk} mm</span>
+          <span><b>Güvenlik:</b> ${guvenlik}</span>
+          <span><b>AKS:</b> ${aks}</span>
+          ${modCiftKanat 
+            ? `<span><b>Sağ Genişlik:</b> ${genislik} mm</span><span><b>Sol Genişlik:</b> ${solGenislik} mm</span><span><b>Çift Kanat Tipi:</b> ${ciftKanatTip}</span><span><b>Kilit Tipi:</b> ${kilitTip}</span><span><b>Orta Kayıt:</b> ${ortaKayit}</span>` 
+            : `<span><b>Kanat Genişliği:</b> ${genislik} mm</span>`}
+          ${modTekAcilim 
+            ? '<span><b>Tek Açılım</b></span>' 
+            : `<span><b>Çift Açılım:</b> ${acilim}</span>`}
+        </div>
+      </div>
+    `;
+
+    let tableRows = '';
+
+    if (modCiftKanat) {
+      tableRows = hesaplaCiftAcilimCiftKanat(genislik, solGenislik, uzunluk, guvenlik, aks, acilim, ciftKanatTip, kilitTip, ortaKayit);
+    } else if (modTekAcilim) {
+      tableRows = hesaplaTekAcilim(genislik, uzunluk, guvenlik, aks);
+    } else {
+      tableRows = hesaplaCiftAcilimTekKanat(genislik, uzunluk, guvenlik, aks, acilim);
+    }
+
+    let sonucHtml = `
+      ${infoHtml}
+      <table>
+        <tr><th>ÜRÜN ADI</th><th>KOD</th><th>ADET</th><th>ÜRÜN RESMİ</th></tr>
+        ${tableRows}
+      </table>
+    `;
+
+    document.getElementById('sonuc').innerHTML = sonucHtml;
+  }
+
+  // ============================================================
+  // BUTON OLAYLARI
+  // ============================================================
+  const btnTek = document.getElementById('btnTekKanat');
+  const btnCift = document.getElementById('btnCiftKanat');
+  const btnTekAcilim = document.getElementById('btnTekAcilim');
+  const ciftKanatTipDiv = document.getElementById('ciftKanatTipDiv');
+  const kilitTipDiv = document.getElementById('kilitTipDiv');
+  const ortaKayitDiv = document.getElementById('ortaKayitDiv');
+  const acilimDiv = document.getElementById('acilimDiv');
+  const ciftKanatTipSelect = document.getElementById('ciftKanatTip');
+
+  function setActive(activeBtn) {
+    [btnTek, btnCift, btnTekAcilim].forEach(b => b.classList.remove('active'));
+    activeBtn.classList.add('active');
+  }
+
+  function ciftKanatTipDegisti() {
+    const secilenTip = ciftKanatTipSelect.value;
+    if (secilenTip === "TİP2") {
+      acilimDiv.style.display = 'none';
+    } else {
+      acilimDiv.style.display = 'block';
+    }
+  }
+
+  ciftKanatTipSelect.addEventListener('change', ciftKanatTipDegisti);
+
+  btnTek.addEventListener('click', function() {
+    setActive(this);
+    document.getElementById('sagGenislikDiv').style.display = 'block';
+    document.getElementById('solGenislikDiv').style.display = 'none';
+    document.querySelector('#sagGenislikDiv label').textContent = 'Kanat Genişliği (mm)';
+    document.getElementById('genislik').placeholder = '375 - 1485 mm';
+    acilimDiv.style.display = 'block';
+    document.getElementById('solGenislik').value = '';
+    ciftKanatTipDiv.style.display = 'none';
+    kilitTipDiv.style.display = 'none';
+    ortaKayitDiv.style.display = 'none';
+  });
+
+  btnCift.addEventListener('click', function() {
+    setActive(this);
+    document.getElementById('sagGenislikDiv').style.display = 'block';
+    document.getElementById('solGenislikDiv').style.display = 'block';
+    document.querySelector('#sagGenislikDiv label').textContent = 'Sağ Kanat Genişliği (mm)';
+    document.getElementById('genislik').placeholder = '375 - 1485 mm';
+    document.getElementById('solGenislik').placeholder = '375 - 1485 mm';
+    ciftKanatTipDiv.style.display = 'block';
+    kilitTipDiv.style.display = 'block';
+    ortaKayitDiv.style.display = 'block';
+    ciftKanatTipDegisti();
+  });
+
+  btnTekAcilim.addEventListener('click', function() {
+    setActive(this);
+    document.getElementById('sagGenislikDiv').style.display = 'block';
+    document.getElementById('solGenislikDiv').style.display = 'none';
+    document.querySelector('#sagGenislikDiv label').textContent = 'Kanat Genişliği (mm)';
+    document.getElementById('genislik').placeholder = '375 - 1485 mm';
+    acilimDiv.style.display = 'none';
+    document.getElementById('solGenislik').value = '';
+    ciftKanatTipDiv.style.display = 'none';
+    kilitTipDiv.style.display = 'none';
+    ortaKayitDiv.style.display = 'none';
+  });
+
+  // Başlangıç
+  document.getElementById('solGenislikDiv').style.display = 'none';
+  acilimDiv.style.display = 'block';
+  document.getElementById('genislik').placeholder = '375 - 1485 mm';
+  ciftKanatTipDiv.style.display = 'none';
+  kilitTipDiv.style.display = 'none';
+  ortaKayitDiv.style.display = 'none';
+</script>
+
+</body>
+</html>

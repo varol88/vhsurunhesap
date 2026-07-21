@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Seçim Sayfası</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1100px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #1a2634;
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .sub-title {
+            text-align: center;
+            color: #6b7a8f;
+            font-size: 16px;
+            margin-bottom: 40px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        
+        .system-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+        
+        .system-card {
+            background: #f8f9fc;
+            border-radius: 16px;
+            padding: 25px 20px 20px;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .system-card:hover {
+            border-color: #0078d7;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,120,215,0.12);
+        }
+        
+        .system-card.main-card {
+            background: linear-gradient(135deg, #e8f0fe, #d4e4f7);
+            border-color: #0078d7;
+        }
+        
+        .system-card.main-card:hover {
+            background: linear-gradient(135deg, #d4e4f7, #b8d4f0);
+        }
+        
+        .card-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+            display: block;
+        }
+        
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a2634;
+            margin-bottom: 8px;
+        }
+        
+        .card-title .arrow {
+            color: #0078d7;
+            font-size: 18px;
+            margin-left: 6px;
+        }
+        
+        .card-desc {
+            color: #6b7a8f;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .sub-menu {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #e9edf2;
+            display: none;
+        }
+        
+        .system-card:hover .sub-menu {
+            display: block;
+        }
+        
+        .sub-menu-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            margin: 4px 0;
+            border-radius: 8px;
+            background: white;
+            transition: all 0.2s;
+            font-size: 14px;
+            font-weight: 500;
+            color: #2c3e50;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        .sub-menu-item:hover {
+            background: #e8f0fe;
+            color: #0078d7;
+            transform: translateX(4px);
+        }
+        
+        .sub-menu-item .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #0078d7;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        
+        .badge {
+            display: inline-block;
+            background: #0078d7;
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 10px;
+            border-radius: 12px;
+            margin-left: 8px;
+            letter-spacing: 0.5px;
+        }
+        
+        .badge.active {
+            background: #28a745;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 24px;
+            }
+            .system-grid {
+                grid-template-columns: 1fr;
+            }
+            .sub-menu {
+                display: block !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚪 SİSTEM SEÇİM SAYFASI</h1>
+        <p class="sub-title">Donanım Hesaplama Sistemleri</p>
+        
+        <div class="system-grid">
+            
+            <!-- 1. ÇİFT AÇILIM SİSTEMLERİ (ANA) -->
+            <div class="system-card main-card" onclick="window.location.href='cahesap.html'">
+                <span class="card-icon">🔄</span>
+                <div class="card-title">
+                    ÇİFT AÇILIM SİSTEMLERİ
+                    <span class="arrow">→</span>
+                </div>
+                <div class="card-desc">
+                    Çift açılım kapı sistemleri donanım hesaplama
+                    <span class="badge active">AKTİF</span>
+                </div>
+                <div class="sub-menu">
+                    <div class="sub-menu-item" onclick="event.stopPropagation(); window.location.href='cahesap.html'">
+                        <span class="dot"></span> Çift Açılım Donanım Hesap Sayfası
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 2. KİLİTLİ KAPI -->
+            <div class="system-card">
+                <span class="card-icon">🔒</span>
+                <div class="card-title">
+                    KİLİTLİ KAPI
+                    <span class="arrow">▼</span>
+                </div>
+                <div class="card-desc">Kilitli kapı sistemleri donanım hesaplama</div>
+                <div class="sub-menu">
+                    <div class="sub-menu-item" onclick="alert('Kilitli Kapı - Çelik Kapı Kilitleri sayfası yakında eklenecek')">
+                        <span class="dot"></span> Çelik Kapı Kilitleri
+                    </div>
+                    <div class="sub-menu-item" onclick="alert('Kilitli Kapı - Gömme Kilit sayfası yakında eklenecek')">
+                        <span class="dot"></span> Gömme Kilit
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 3. SÜRME SİSTEMLERİ -->
+            <div class="system-card">
+                <span class="card-icon">🚪</span>
+                <div class="card-title">
+                    SÜRME SİSTEMLERİ
+                    <span class="arrow">▼</span>
+                </div>
+                <div class="card-desc">Sürme kapı sistemleri donanım hesaplama</div>
+                <div class="sub-menu">
+                    <div class="sub-menu-item" onclick="alert('TSS Sürme Sistemi sayfası yakında eklenecek')">
+                        <span class="dot"></span> TSS Sürme Sistemi
+                    </div>
+                    <div class="sub-menu-item" onclick="alert('USS Sürme Sistemi sayfası yakında eklenecek')">
+                        <span class="dot"></span> USS Sürme Sistemi
+                    </div>
+                    <div class="sub-menu-item" onclick="alert('Easy Slide Sürme Sistemi sayfası yakında eklenecek')">
+                        <span class="dot"></span> Easy Slide Sürme Sistemi
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 4. MENTEŞE -->
+            <div class="system-card">
+                <span class="card-icon">🔩</span>
+                <div class="card-title">
+                    MENTEŞE
+                    <span class="arrow">▼</span>
+                </div>
+                <div class="card-desc">Menteşe sistemleri donanım hesaplama</div>
+                <div class="sub-menu">
+                    <div class="sub-menu-item" onclick="alert('Sac Menteşe sayfası yakında eklenecek')">
+                        <span class="dot"></span> Sac Menteşe
+                    </div>
+                    <div class="sub-menu-item" onclick="alert('Zamak Menteşe sayfası yakında eklenecek')">
+                        <span class="dot"></span> Zamak Menteşe
+                    </div>
+                    <div class="sub-menu-item" onclick="alert('Easyfix Menteşe sayfası yakında eklenecek')">
+                        <span class="dot"></span> Easyfix Menteşe
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 5. GÖMME KİLİT -->
+            <div class="system-card">
+                <span class="card-icon">🗝️</span>
+                <div class="card-title">
+                    GÖMME KİLİT
+                    <span class="arrow">▼</span>
+                </div>
+                <div class="card-desc">Gömme kilit sistemleri donanım hesaplama</div>
+                <div class="sub-menu">
+                    <div class="sub-menu-item" onclick="alert('Gömme Kilit sayfası yakında eklenecek')">
+                        <span class="dot"></span> Gömme Kilit
+                    </div>
+                    <div class="sub-menu-item" onclick="alert('Çelik Kapı Kilitleri sayfası yakında eklenecek')">
+                        <span class="dot"></span> Çelik Kapı Kilitleri
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 6. BAREL / KAPI VE PENCERE KOLU -->
+            <div class="system-card">
+                <span class="card-icon">🚪</span>
+                <div class="card-title">
+                    BAREL / KAPI VE PENCERE KOLU
+                    <span class="arrow">▼</span>
+                </div>
+                <div class="card-desc">Barel ve kol sistemleri donanım hesaplama</div>
+                <div class="sub-menu">
+                    <div class="sub-menu-item" onclick="alert('Barel sayfası yakında eklenecek')">
+                        <span class="dot"></span> Barel
+                    </div>
+                    <div class="sub-menu-item" onclick="alert('Kapı ve Pencere Kolu sayfası yakında eklenecek')">
+                        <span class="dot"></span> Kapı ve Pencere Kolu
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        
+        <!-- Alt Bilgi -->
+        <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e9edf2; text-align: center; color: #8a9aa8; font-size: 13px;">
+            Donanım Hesaplama Sistemi v2.0 • Tüm hakları saklıdır.
+        </div>
+    </div>
+    
+    <script>
+        // Sistem kartlarına tıklanınca alt menü toggle (ana kart hariç)
+        document.querySelectorAll('.system-card:not(.main-card)').forEach(card => {
+            card.addEventListener('click', function(e) {
+                if (e.target.closest('.sub-menu-item')) return;
+                
+                const subMenu = this.querySelector('.sub-menu');
+                if (subMenu) {
+                    document.querySelectorAll('.system-card .sub-menu').forEach(menu => {
+                        if (menu !== subMenu) {
+                            menu.style.display = 'none';
+                        }
+                    });
+                    if (subMenu.style.display === 'block') {
+                        subMenu.style.display = 'none';
+                    } else {
+                        subMenu.style.display = 'block';
+                    }
+                }
+            });
+        });
+        
+        // Mobilde alt menüler açık olsun
+        if (window.innerWidth <= 768) {
+            document.querySelectorAll('.system-card .sub-menu').forEach(menu => {
+                menu.style.display = 'block';
+            });
+        }
+    </script>
+</body>
+</html>
