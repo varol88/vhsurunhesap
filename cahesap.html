@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Donanım Hesaplama</title>
-  <!-- Three.js ve STL Loader -->
+  <!-- Three.js ve STL Loader - GitHub CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -426,7 +426,7 @@
   };
 
   // ============================================================
-  // 3D STL GÖRÜNTÜLEYİCİ (Three.js)
+  // 3D STL GÖRÜNTÜLEYİCİ (Three.js) - GITHUB PAGES UYUMLU
   // ============================================================
   let scene, camera, renderer, controls;
   let stlGosteriliyor = false;
@@ -454,7 +454,8 @@
       stlGosteriliyor = false;
     }
 
-    // STL dosya yolu - Klasör kontrolü
+    // STL dosya yolu - GitHub Pages için doğru yol
+    // Sayfanın bulunduğu dizine göre ayarlayın
     const stlYolu = `stl/${kod}.stl`;
     
     console.log(`🔍 STL dosyası aranıyor: ${stlYolu}`);
@@ -502,12 +503,20 @@
     backLight.position.set(0, 0, -1);
     scene.add(backLight);
 
-    // STL Yükle - Hata yönetimi geliştirildi
-    const loader = new THREE.STLLoader();
-    loader.load(
-      stlYolu,
-      function(geometry) {
-        // Başarılı yükleme
+    // GitHub Pages'de CORS'u aşmak için fetch + Blob kullanımı
+    // STL dosyasını fetch ile al, blob'a çevir, sonra STLLoader ile yükle
+    fetch(stlYolu)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.arrayBuffer();
+      })
+      .then(arrayBuffer => {
+        // ArrayBuffer'ı STLLoader ile parse et
+        const loader = new THREE.STLLoader();
+        const geometry = loader.parse(arrayBuffer);
+        
         console.log(`✅ STL başarıyla yüklendi: ${stlYolu}`);
         const material = new THREE.MeshPhongMaterial({
           color: 0x0078d7,
@@ -539,30 +548,16 @@
         
         // Render döngüsü
         animate();
-      },
-      function(xhr) {
-        // Yükleme ilerlemesi
-        if (xhr.total > 0) {
-          const progress = (xhr.loaded / xhr.total * 100).toFixed(0);
-          container.innerHTML = `<div class="loading-text">⏳ 3D Model Yükleniyor... %${progress}</div>`;
-        }
-      },
-      function(error) {
-        // Hata durumu - Detaylı hata mesajı
+      })
+      .catch(error => {
+        // Hata durumu
         console.error('❌ STL yüklenemedi:', error);
         console.error(`📁 Aranan dosya: ${stlYolu}`);
         
         let hataMesaji = '❌ 3D Model Bulunamadı!';
         let hataDetay = `Dosya: ${stlYolu}\n`;
         hataDetay += `Lütfen stl/ klasöründe "${kod}.stl" dosyasının olduğundan emin olun.`;
-        
-        // Klasör kontrolü için öneri
-        const possiblePaths = [
-          `stl/${kod}.stl`,
-          `./stl/${kod}.stl`,
-          `../stl/${kod}.stl`
-        ];
-        hataDetay += '\n\n🔍 Aranan yollar:\n' + possiblePaths.join('\n');
+        hataDetay += '\n\n📌 GitHub Pages için dosya adlarının aynı olduğundan emin olun.';
         
         container.innerHTML = `
           <div class="loading-text" style="color:#ff6b6b;">
@@ -570,8 +565,7 @@
             <div class="hata-detay">${hataDetay.replace(/\n/g, '<br>')}</div>
           </div>
         `;
-      }
-    );
+      });
   }
 
   function animate() {
